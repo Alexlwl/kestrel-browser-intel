@@ -37,6 +37,10 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
     private var findNextButton: ToolbarButton!
     private let findDoneButton = NSButton()
     private var findVisible = false
+    /// buildChrome() 未跑完时 layoutChrome() 必须直接返回：
+    /// setFrameAutosaveName() 会同步触发 windowDidResize → layoutChrome()，
+    /// 而那时所有 ToolbarButton! 还是 nil，隐式解包会 ud2 (SIGILL) 崩溃。
+    private var chromeBuilt = false
 
     private var hibernationTimer: Timer?
     private var memoryTimer: Timer?
@@ -61,19 +65,21 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
                          backing: .buffered, defer: false)
         super.init(window: w)
 
-        w.delegate = self
         w.title = isPrivate ? "Kestrel 隐私窗口" : "Kestrel"
         w.titleVisibility = .hidden
         w.titlebarAppearsTransparent = true
         w.isMovableByWindowBackground = true
         w.minSize = NSSize(width: 520, height: 380)
         w.tabbingMode = .disallowed          // we manage our own tabs
-        w.setFrameAutosaveName(isPrivate ? "KestrelPrivateWindow" : "KestrelWindow")
         w.backgroundColor = .windowBackgroundColor
         if #available(macOS 11.0, *) { w.titlebarSeparatorStyle = .none }
 
         buildChrome()
         w.contentView = root
+        // 必须在 buildChrome() 之后：setFrameAutosaveName() 若有已存的
+        // "NSWindow Frame KestrelWindow" 会立刻套用并同步发出 windowDidResize。
+        w.delegate = self
+        w.setFrameAutosaveName(isPrivate ? "KestrelPrivateWindow" : "KestrelWindow")
 
         startHibernationTimer()
         startMemoryReadout()
@@ -157,11 +163,15 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
             self.refreshChrome()
             self.attachActiveTab()
         }
+
+        chromeBuilt = true
+        layoutChrome()
     }
 
     override func windowDidLoad() { super.windowDidLoad() }
 
     private func layoutChrome() {
+        guard chromeBuilt else { return }
         let b = root.bounds
         let trafficLightInset: CGFloat = 82
         let tabRow: CGFloat = 36
