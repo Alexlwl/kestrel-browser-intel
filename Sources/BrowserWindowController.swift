@@ -62,7 +62,7 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
         super.init(window: w)
 
         w.delegate = self
-        w.title = isPrivate ? "Kestrel Private" : "Kestrel"
+        w.title = isPrivate ? "Kestrel 隐私窗口" : "Kestrel"
         w.titleVisibility = .hidden
         w.titlebarAppearsTransparent = true
         w.isMovableByWindowBackground = true
@@ -109,9 +109,9 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
                                    target: self, action: #selector(goBack))
         forwardButton = ToolbarButton(symbol: "chevron.forward", tip: "Forward (\u{2318}])",
                                       target: self, action: #selector(goForward))
-        reloadButton = ToolbarButton(symbol: "arrow.clockwise", tip: "Reload (\u{2318}R)",
+        reloadButton = ToolbarButton(symbol: "arrow.clockwise", tip: "重新加载(\u{2318}R)",
                                      target: self, action: #selector(reloadOrStop))
-        bookmarkButton = ToolbarButton(symbol: "star", tip: "Bookmark (\u{2318}D)",
+        bookmarkButton = ToolbarButton(symbol: "star", tip: "添加书签(\u{2318}D)",
                                        target: self, action: #selector(toggleBookmark))
         bookmarkButton.onTint = .systemYellow
         shieldButton = ToolbarButton(symbol: "shield.lefthalf.filled",
@@ -132,7 +132,7 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
          shieldButton, statusPill].forEach { toolbarRow.addSubview($0!) }
 
         // Find bar
-        findField.placeholderString = "Find on page"
+        findField.placeholderString = "在页面中查找"
         findField.font = .systemFont(ofSize: 12)
         findField.bezelStyle = .roundedBezel
         findField.target = self
@@ -143,7 +143,7 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
                                        target: self, action: #selector(findPrevious), pointSize: 11)
         findNextButton = ToolbarButton(symbol: "chevron.down", tip: "Next (\u{2318}G)",
                                        target: self, action: #selector(findNext), pointSize: 11)
-        findDoneButton.title = "Done"
+        findDoneButton.title = "完成"
         findDoneButton.bezelStyle = .rounded
         findDoneButton.controlSize = .small
         findDoneButton.target = self
@@ -305,7 +305,7 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
     /// Restores the last closed tab with its history and scroll position intact.
     @objc func reopenClosedTab() {
         guard let saved = closedTabs.popLast() else {
-            showStatus("No recently closed tabs")
+            showStatus("没有最近关闭的标签页")
             return
         }
         let tab = Tab(saved: saved, delegate: self)
@@ -354,7 +354,7 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
         forwardButton.isEnabled = tab.canGoForward
 
         reloadButton.setSymbol(tab.isLoading ? "xmark" : "arrow.clockwise")
-        reloadButton.toolTip = tab.isLoading ? "Stop loading" : "Reload (\u{2318}R)"
+        reloadButton.toolTip = tab.isLoading ? "停止加载" : "重新加载(\u{2318}R)"
         progressBar.active = tab.isLoading && tab.progress < 1
         progressBar.progress = tab.progress
 
@@ -376,7 +376,7 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
         shieldButton.isHighlighted2 = blocking
         shieldButton.setSymbol(blocking ? "shield.lefthalf.filled" : "shield.slash")
         shieldButton.toolTip = blocking
-            ? "Blocking \(ContentBlocker.ruleCount) ad & tracker rules \u{2014} click to disable"
+            ? "已屏蔽 \(ContentBlocker.ruleCount) 条广告和跟踪规则 \u{2014} 点击停用"
             : "Ad & tracker blocking off \u{2014} click to enable"
 
         window?.title = tab.displayTitle
@@ -422,13 +422,13 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
             attachActiveTab()
         }
         refreshChrome()
-        showStatus(Config.shared.blockAdsAndTrackers ? "Blocking on" : "Blocking off")
+        showStatus(Config.shared.blockAdsAndTrackers ? "已开启屏蔽" : "已关闭屏蔽")
     }
 
     @objc func toggleBookmark() {
         guard let tab = activeTab, let u = tab.url else { return }
         let added = Store.shared.toggleBookmark(url: u, title: tab.title)
-        showStatus(added ? "Bookmarked" : "Bookmark removed")
+        showStatus(added ? "已添加书签" : "已移除书签")
         refreshChrome()
         AppDelegate.shared?.rebuildBookmarksMenu()
     }
@@ -479,7 +479,7 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
         cfg.caseSensitive = false
         cfg.wraps = true
         wv.find(findField.stringValue, configuration: cfg) { [weak self] result in
-            self?.findCount.stringValue = result.matchFound ? "" : "Not found"
+            self?.findCount.stringValue = result.matchFound ? "" : "未找到"
         }
     }
 
@@ -512,7 +512,7 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
             if !tab.isHibernated { tab.hibernate(); slept += 1 }
         }
         refreshChrome()
-        showStatus(slept == 0 ? "Nothing to sleep" : "Slept \(slept) tab\(slept == 1 ? "" : "s")")
+        showStatus(slept == 0 ? "没有可休眠的标签页" : "已休眠 \(slept) 个标签页")
     }
 
     private func installMemoryPressureHandling() {
@@ -644,36 +644,36 @@ extension BrowserWindowController: TabStripDelegate {
         let tab = tabs[index]
         var items: [(String, () -> Void)] = []
 
-        items.append(("Reload", { [weak self] in
+        items.append(("重新加载", { [weak self] in
             tab.reload(); self?.refreshChrome()
         }))
-        items.append(("Duplicate Tab", { [weak self] in
+        items.append(("复制标签页", { [weak self] in
             guard let self, let u = tab.url else { return }
             self.newTab(url: u)
         }))
         if let u = tab.url {
-            items.append(("Copy Address", {
+            items.append(("拷贝地址", {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(u.absoluteString, forType: .string)
             }))
         }
         items.append(("-", {}))
         if !tab.isHibernated {
-            items.append(("Put Tab to Sleep", { [weak self] in
+            items.append(("休眠标签页", { [weak self] in
                 guard let self else { return }
                 // Never tear down the tab currently on screen.
-                if tab === self.activeTab { self.showStatus("Can\u{2019}t sleep the active tab"); return }
+                if tab === self.activeTab { self.showStatus("无法休眠当前活动标签页"); return }
                 tab.hibernate()
                 self.refreshChrome()
             }))
         }
         items.append(("-", {}))
-        items.append(("Close Tab", { [weak self] in
+        items.append(("关闭标签页", { [weak self] in
             guard let self, let i = self.tabs.firstIndex(where: { $0 === tab }) else { return }
             self.closeTab(index: i)
         }))
         if tabs.count > 1 {
-            items.append(("Close Other Tabs", { [weak self] in
+            items.append(("关闭其他标签页", { [weak self] in
                 guard let self else { return }
                 for other in self.tabs where other !== tab {
                     if let u = other.url { self.closedTabs.append(other.snapshot()); _ = u }

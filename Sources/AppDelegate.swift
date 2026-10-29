@@ -9,8 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// link while Kestrel is closed), so hold them until the window is up.
     private var isReady = false
     private var pendingURLs: [URL] = []
-    private let bookmarksMenu = NSMenu(title: "Bookmarks")
-    private let historyMenu = NSMenu(title: "History")
+    private let bookmarksMenu = NSMenu(title: "书签")
+    private let historyMenu = NSMenu(title: "历史")
 
     var front: BrowserWindowController? {
         if let w = NSApp.keyWindow?.windowController as? BrowserWindowController { return w }
@@ -143,27 +143,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc func clearHistory() {
         let a = NSAlert()
-        a.messageText = "Clear browsing history?"
-        a.informativeText = "Bookmarks and cookies are kept."
-        a.addButton(withTitle: "Clear")
-        a.addButton(withTitle: "Cancel")
+        a.messageText = "清除浏览历史?"
+        a.informativeText = "书签和 Cookie 会保留。"
+        a.addButton(withTitle: "清除")
+        a.addButton(withTitle: "取消")
         guard a.runModal() == .alertFirstButtonReturn else { return }
         Store.shared.clearHistory()
         rebuildHistoryMenu()
-        front?.showStatus("History cleared")
+        front?.showStatus("历史已清除")
     }
 
     @objc func clearWebsiteData() {
         let a = NSAlert()
-        a.messageText = "Clear cookies and cached data?"
-        a.informativeText = "You will be signed out of websites."
-        a.addButton(withTitle: "Clear")
-        a.addButton(withTitle: "Cancel")
+        a.messageText = "清除 Cookie 和缓存数据?"
+        a.informativeText = "你将被登出所有网站。"
+        a.addButton(withTitle: "清除")
+        a.addButton(withTitle: "取消")
         guard a.runModal() == .alertFirstButtonReturn else { return }
         let types = WKWebsiteDataStore.allWebsiteDataTypes()
         WKWebsiteDataStore.default().removeData(ofTypes: types, modifiedSince: .distantPast) { [weak self] in
             URLCache.shared.removeAllCachedResponses()
-            self?.front?.showStatus("Website data cleared")
+            self?.front?.showStatus("网站数据已清除")
         }
     }
 
@@ -172,10 +172,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "http") { [weak self] err in
             DispatchQueue.main.async {
                 if let err {
-                    self?.front?.showStatus("Couldn\u{2019}t set default: \(err.localizedDescription)")
+                    self?.front?.showStatus("无法设为默认浏览器:\(err.localizedDescription)")
                 } else {
                     NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "https") { _ in }
-                    self?.front?.showStatus("Kestrel is now the default browser")
+                    self?.front?.showStatus("Kestrel 现在是默认浏览器")
                 }
             }
         }
@@ -186,13 +186,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let a = NSAlert()
         a.messageText = "Kestrel"
         a.informativeText = """
-        A minimal browser on the system WebKit engine.
+        基于系统 WebKit 引擎的极简浏览器。
 
-        Right now: \(s.display) across \(s.helperCount + 1) process\(s.helperCount == 0 ? "" : "es").
-        Blocking \(ContentBlocker.ruleCount) ad and tracker rules.
-        Background tabs sleep after \(Int(Config.shared.hibernateAfterMinutes)) min.
+        当前:\(s.display),共 \(s.helperCount + 1) 个进程。
+        已屏蔽 \(ContentBlocker.ruleCount) 条广告和跟踪规则。
+        后台标签页在 \(Int(Config.shared.hibernateAfterMinutes)) 分钟后休眠。
         """
-        a.addButton(withTitle: "OK")
+        a.addButton(withTitle: "好")
         a.runModal()
     }
 
@@ -200,12 +200,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func rebuildBookmarksMenu() {
         bookmarksMenu.removeAllItems()
-        let add = NSMenuItem(title: "Bookmark This Page", action: #selector(bookmark), keyEquivalent: "d")
+        let add = NSMenuItem(title: "为此页添加书签", action: #selector(bookmark), keyEquivalent: "d")
         add.target = self
         bookmarksMenu.addItem(add)
         bookmarksMenu.addItem(.separator())
         if Store.shared.bookmarks.isEmpty {
-            let empty = NSMenuItem(title: "No Bookmarks", action: nil, keyEquivalent: "")
+            let empty = NSMenuItem(title: "无书签", action: nil, keyEquivalent: "")
             empty.isEnabled = false
             bookmarksMenu.addItem(empty)
         }
@@ -226,8 +226,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             i.target = self
             historyMenu.addItem(i)
         }
-        add("Back", #selector(goBack), "[")
-        add("Forward", #selector(goForward), "]")
+        add("后退", #selector(goBack), "[")
+        add("前进", #selector(goForward), "]")
         historyMenu.addItem(.separator())
         for e in Store.shared.recentHistory(limit: 15) {
             let title = e.title.isEmpty ? Store.displayForm(e.url) : e.title
@@ -237,8 +237,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             historyMenu.addItem(item)
         }
         historyMenu.addItem(.separator())
-        add("Clear History\u{2026}", #selector(clearHistory), "")
-        add("Clear Cookies and Cache\u{2026}", #selector(clearWebsiteData), "")
+        add("清除历史记录\u{2026}", #selector(clearHistory), "")
+        add("清除 Cookie 和缓存\u{2026}", #selector(clearWebsiteData), "")
     }
 
     private func buildMenu() {
@@ -262,86 +262,86 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // App menu
         let (_, app) = menu("Kestrel")
-        add(app, "About Kestrel", #selector(showAbout), target: self)
+        add(app, "关于 Kestrel", #selector(showAbout), target: self)
         app.addItem(.separator())
-        add(app, "Settings\u{2026}", #selector(openSettings), ",", target: self)
-        add(app, "Edit Blocklist\u{2026}", #selector(openBlocklist), target: self)
-        add(app, "Make Kestrel the Default Browser", #selector(makeDefaultBrowser), target: self)
+        add(app, "设置\u{2026}", #selector(openSettings), ",", target: self)
+        add(app, "编辑屏蔽列表\u{2026}", #selector(openBlocklist), target: self)
+        add(app, "将 Kestrel 设为默认浏览器", #selector(makeDefaultBrowser), target: self)
         app.addItem(.separator())
-        add(app, "Hide Kestrel", #selector(NSApplication.hide(_:)), "h")
-        add(app, "Hide Others", #selector(NSApplication.hideOtherApplications(_:)), "h", [.command, .option])
-        add(app, "Show All", #selector(NSApplication.unhideAllApplications(_:)))
+        add(app, "隐藏 Kestrel", #selector(NSApplication.hide(_:)), "h")
+        add(app, "隐藏其他", #selector(NSApplication.hideOtherApplications(_:)), "h", [.command, .option])
+        add(app, "全部显示", #selector(NSApplication.unhideAllApplications(_:)))
         app.addItem(.separator())
-        add(app, "Quit Kestrel", #selector(NSApplication.terminate(_:)), "q")
+        add(app, "退出 Kestrel", #selector(NSApplication.terminate(_:)), "q")
 
         // File
-        let (_, file) = menu("File")
-        add(file, "New Tab", #selector(newTab), "t", target: self)
-        add(file, "New Window", #selector(newWindow), "n", target: self)
-        add(file, "New Private Window", #selector(newPrivateWindow), "n", [.command, .shift], target: self)
+        let (_, file) = menu("文件")
+        add(file, "新建标签页", #selector(newTab), "t", target: self)
+        add(file, "新建窗口", #selector(newWindow), "n", target: self)
+        add(file, "新建隐私窗口", #selector(newPrivateWindow), "n", [.command, .shift], target: self)
         file.addItem(.separator())
-        add(file, "Open Location\u{2026}", #selector(focusAddressBar), "l", target: self)
+        add(file, "打开位置\u{2026}", #selector(focusAddressBar), "l", target: self)
         file.addItem(.separator())
-        add(file, "Close Tab", #selector(closeTab), "w", target: self)
-        add(file, "Reopen Closed Tab", #selector(reopenClosedTab), "t", [.command, .shift], target: self)
-        add(file, "Close Window", #selector(NSWindow.performClose(_:)), "w", [.command, .shift])
+        add(file, "关闭标签页", #selector(closeTab), "w", target: self)
+        add(file, "重新打开关闭的标签页", #selector(reopenClosedTab), "t", [.command, .shift], target: self)
+        add(file, "关闭窗口", #selector(NSWindow.performClose(_:)), "w", [.command, .shift])
         file.addItem(.separator())
-        add(file, "Open Downloads Folder", #selector(openDownloadsFolder), "j", [.command, .shift], target: self)
+        add(file, "打开下载文件夹", #selector(openDownloadsFolder), "j", [.command, .shift], target: self)
 
         // Edit  (standard responder selectors: required for text editing inside pages)
-        let (_, edit) = menu("Edit")
-        add(edit, "Undo", Selector(("undo:")), "z")
-        add(edit, "Redo", Selector(("redo:")), "z", [.command, .shift])
+        let (_, edit) = menu("编辑")
+        add(edit, "撤销", Selector(("undo:")), "z")
+        add(edit, "重做", Selector(("redo:")), "z", [.command, .shift])
         edit.addItem(.separator())
-        add(edit, "Cut", #selector(NSText.cut(_:)), "x")
-        add(edit, "Copy", #selector(NSText.copy(_:)), "c")
-        add(edit, "Paste", #selector(NSText.paste(_:)), "v")
-        add(edit, "Paste and Match Style", #selector(NSTextView.pasteAsPlainText(_:)), "v", [.command, .option, .shift])
-        add(edit, "Select All", #selector(NSText.selectAll(_:)), "a")
+        add(edit, "剪切", #selector(NSText.cut(_:)), "x")
+        add(edit, "拷贝", #selector(NSText.copy(_:)), "c")
+        add(edit, "粘贴", #selector(NSText.paste(_:)), "v")
+        add(edit, "粘贴并匹配样式", #selector(NSTextView.pasteAsPlainText(_:)), "v", [.command, .option, .shift])
+        add(edit, "全选", #selector(NSText.selectAll(_:)), "a")
         edit.addItem(.separator())
-        add(edit, "Find\u{2026}", #selector(find), "f", target: self)
-        add(edit, "Find Next", #selector(findNext), "g", target: self)
-        add(edit, "Find Previous", #selector(findPrevious), "g", [.command, .shift], target: self)
+        add(edit, "查找\u{2026}", #selector(find), "f", target: self)
+        add(edit, "查找下一个", #selector(findNext), "g", target: self)
+        add(edit, "查找上一个", #selector(findPrevious), "g", [.command, .shift], target: self)
 
         // View
-        let (_, view) = menu("View")
-        add(view, "Reload Page", #selector(reload), "r", target: self)
-        add(view, "Stop", #selector(stopLoading), ".", target: self)
+        let (_, view) = menu("显示")
+        add(view, "重新加载页面", #selector(reload), "r", target: self)
+        add(view, "停止", #selector(stopLoading), ".", target: self)
         view.addItem(.separator())
-        add(view, "Actual Size", #selector(zoomReset), "0", target: self)
-        add(view, "Zoom In", #selector(zoomIn), "+", target: self)
-        add(view, "Zoom Out", #selector(zoomOut), "-", target: self)
+        add(view, "实际大小", #selector(zoomReset), "0", target: self)
+        add(view, "放大", #selector(zoomIn), "+", target: self)
+        add(view, "缩小", #selector(zoomOut), "-", target: self)
         view.addItem(.separator())
-        add(view, "Sleep Background Tabs Now", #selector(sleepBackgroundTabs), "h", [.command, .shift], target: self)
+        add(view, "立即休眠后台标签页", #selector(sleepBackgroundTabs), "h", [.command, .shift], target: self)
         view.addItem(.separator())
-        add(view, "Enter Full Screen", #selector(NSWindow.toggleFullScreen(_:)), "f", [.command, .control])
+        add(view, "进入全屏", #selector(NSWindow.toggleFullScreen(_:)), "f", [.command, .control])
 
         // History
-        let (historyItem, _) = menu("History")
+        let (historyItem, _) = menu("历史")
         historyItem.submenu = historyMenu
         historyMenu.delegate = self
         rebuildHistoryMenu()
 
         // Bookmarks
-        let (bmItem, _) = menu("Bookmarks")
+        let (bmItem, _) = menu("书签")
         bmItem.submenu = bookmarksMenu
 
         // Window
-        let (windowItem, windowMenu) = menu("Window")
-        add(windowMenu, "Minimize", #selector(NSWindow.performMiniaturize(_:)), "m")
-        add(windowMenu, "Zoom", #selector(NSWindow.performZoom(_:)))
+        let (windowItem, windowMenu) = menu("窗口")
+        add(windowMenu, "最小化", #selector(NSWindow.performMiniaturize(_:)), "m")
+        add(windowMenu, "缩放", #selector(NSWindow.performZoom(_:)))
         windowMenu.addItem(.separator())
-        add(windowMenu, "Show Next Tab", #selector(nextTab), "\u{0009}", [.control], target: self)
-        add(windowMenu, "Show Previous Tab", #selector(previousTab), "\u{0009}", [.control, .shift], target: self)
+        add(windowMenu, "显示下一个标签页", #selector(nextTab), "\u{0009}", [.control], target: self)
+        add(windowMenu, "显示上一个标签页", #selector(previousTab), "\u{0009}", [.control, .shift], target: self)
         // Arrow variants: the shortcut most people reach for first.
-        add(windowMenu, "Next Tab (arrow)", #selector(nextTab), "\u{F703}", [.command, .option], target: self)
-        add(windowMenu, "Previous Tab (arrow)", #selector(previousTab), "\u{F702}", [.command, .option], target: self)
+        add(windowMenu, "下一个标签页(方向键)", #selector(nextTab), "\u{F703}", [.command, .option], target: self)
+        add(windowMenu, "上一个标签页(方向键)", #selector(previousTab), "\u{F702}", [.command, .option], target: self)
         windowMenu.addItem(.separator())
         for n in 1...9 {
-            add(windowMenu, "Tab \(n)", #selector(selectTabByNumber(_:)), "\(n)", target: self, tag: n - 1)
+            add(windowMenu, "标签页 \(n)", #selector(selectTabByNumber(_:)), "\(n)", target: self, tag: n - 1)
         }
         windowMenu.addItem(.separator())
-        add(windowMenu, "Bring All to Front", #selector(NSApplication.arrangeInFront(_:)))
+        add(windowMenu, "前置全部窗口", #selector(NSApplication.arrangeInFront(_:)))
         NSApp.windowsMenu = windowMenu
         _ = windowItem
 

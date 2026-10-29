@@ -225,7 +225,7 @@ final class TabStripView: NSView {
         super.init(frame: frameRect)
         newTabButton.bezelStyle = .accessoryBarAction
         newTabButton.isBordered = false
-        newTabButton.image = NSImage(systemSymbolName: "plus", accessibilityDescription: "New Tab")
+        newTabButton.image = NSImage(systemSymbolName: "plus", accessibilityDescription: "新建标签页")
         newTabButton.imageScaling = .scaleProportionallyDown
         newTabButton.target = self
         newTabButton.action = #selector(newTab)

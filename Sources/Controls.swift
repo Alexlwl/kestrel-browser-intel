@@ -149,7 +149,7 @@ final class URLBar: NSView {
         field.usesSingleLineMode = true
         field.cell?.wraps = false
         field.cell?.isScrollable = true
-        field.placeholderString = "Search or enter address"
+        field.placeholderString = "搜索或输入地址"
         glyph.imageScaling = .scaleNone
         glyph.contentTintColor = .tertiaryLabelColor
         addSubview(glyph)

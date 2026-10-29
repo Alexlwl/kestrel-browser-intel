@@ -60,7 +60,7 @@ final class Tab: NSObject {
     var displayTitle: String {
         if !title.isEmpty { return title }
         if let host = url?.host { return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host }
-        return "New Tab"
+        return "新标签页"
     }
 
     init(url: URL?, isPrivate: Bool = false, delegate: TabDelegate?,
@@ -360,7 +360,7 @@ extension Tab: WKUIDelegate {
         let a = NSAlert()
         a.messageText = frame.securityOrigin.host
         a.informativeText = message
-        a.addButton(withTitle: "OK")
+        a.addButton(withTitle: "好")
         a.beginSheetModal(for: webView.window ?? NSApp.keyWindow ?? NSWindow()) { _ in completionHandler() }
     }
 
@@ -369,8 +369,8 @@ extension Tab: WKUIDelegate {
         let a = NSAlert()
         a.messageText = frame.securityOrigin.host
         a.informativeText = message
-        a.addButton(withTitle: "OK")
-        a.addButton(withTitle: "Cancel")
+        a.addButton(withTitle: "好")
+        a.addButton(withTitle: "取消")
         a.beginSheetModal(for: webView.window ?? NSApp.keyWindow ?? NSWindow()) { r in
             completionHandler(r == .alertFirstButtonReturn)
         }
@@ -385,8 +385,8 @@ extension Tab: WKUIDelegate {
         let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
         field.stringValue = defaultText ?? ""
         a.accessoryView = field
-        a.addButton(withTitle: "OK")
-        a.addButton(withTitle: "Cancel")
+        a.addButton(withTitle: "好")
+        a.addButton(withTitle: "取消")
         a.beginSheetModal(for: webView.window ?? NSApp.keyWindow ?? NSWindow()) { r in
             completionHandler(r == .alertFirstButtonReturn ? field.stringValue : nil)
         }
@@ -397,15 +397,15 @@ extension Tab: WKUIDelegate {
                  decisionHandler: @escaping (WKPermissionDecision) -> Void) {
         let what: String
         switch type {
-        case .camera: what = "use your camera"
-        case .microphone: what = "use your microphone"
-        case .cameraAndMicrophone: what = "use your camera and microphone"
-        @unknown default: what = "use a capture device"
+        case .camera: what = "使用你的摄像头"
+        case .microphone: what = "使用你的麦克风"
+        case .cameraAndMicrophone: what = "使用你的摄像头和麦克风"
+        @unknown default: what = "使用采集设备"
         }
         let a = NSAlert()
-        a.messageText = "Allow \(origin.host) to \(what)?"
-        a.addButton(withTitle: "Allow")
-        a.addButton(withTitle: "Don\u{2019}t Allow")
+        a.messageText = "允许 \(origin.host)\(what)?"
+        a.addButton(withTitle: "允许")
+        a.addButton(withTitle: "不允许")
         a.beginSheetModal(for: webView.window ?? NSApp.keyWindow ?? NSWindow()) { r in
             decisionHandler(r == .alertFirstButtonReturn ? .grant : .deny)
         }
