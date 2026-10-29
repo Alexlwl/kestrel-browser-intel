@@ -67,24 +67,26 @@ func drawIcon(_ ctx: CGContext) {
                            end: CGPoint(x: 512, y: plate.minY),
                            options: [])
 
-    // 2. Soft top highlight, so the plate looks lit from above.
-    let gloss = CGGradient(colorsSpace: cs, colors: [
-        CGColor(red: 1, green: 1, blue: 1, alpha: 0.085),
-        CGColor(red: 1, green: 1, blue: 1, alpha: 0.0),
-    ] as CFArray, locations: [0.0, 1.0])!
-    ctx.drawLinearGradient(gloss,
-                           start: CGPoint(x: 512, y: plate.maxY),
-                           end: CGPoint(x: 512, y: plate.midY + 60),
-                           options: [])
+    // 2. NO top gloss. A white gradient on the plate's top edge (even at alpha
+    //    0.04-0.09) is fine at 1024px but becomes a visible pale halo along the
+    //    top rim once the icon is downscaled to Dock size, and the user reads it
+    //    as a white border. Depth now comes from the plate gradient + inner rim
+    //    only, which never brighten the edge.
     ctx.restoreGState()
 
-    // 3. Hairline rim: a crisp edge keeps the icon from dissolving into a dark Dock.
+    // 3. Inner rim: stroke a DARK hairline INSIDE the plate, never a light one on
+    //    its edge. A white rim (alpha 0.16, 1.5pt) is invisible at 1024px but
+    //    rasterises into a solid bright ring at Dock size (16–64px), which reads
+    //    as a "white border" around the icon. Clipped to the plate and drawn dark,
+    //    the edge instead gets a thin glass thickness that never lights up.
     ctx.saveGState()
-    ctx.addPath(CGPath(roundedRect: plate.insetBy(dx: 0.75, dy: 0.75),
+    ctx.addPath(platePath())
+    ctx.clip()
+    ctx.addPath(CGPath(roundedRect: plate.insetBy(dx: 2, dy: 2),
                        cornerWidth: cornerRadius, cornerHeight: cornerRadius,
                        transform: nil))
-    ctx.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.16))
-    ctx.setLineWidth(1.5)
+    ctx.setStrokeColor(CGColor(red: 0, green: 0, blue: 0, alpha: 0.55))
+    ctx.setLineWidth(5)
     ctx.strokePath()
     ctx.restoreGState()
 

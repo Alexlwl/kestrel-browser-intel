@@ -7,7 +7,10 @@ cd "$(dirname "$0")"
 APP="Kestrel.app"
 NAME="Kestrel"
 BUNDLE_ID="com.kestrel.browser"
-VERSION="1.0"
+# Bump on every artifact change: CFBundleVersion is part of the iconservices cache
+# key, so shipping a new icon under the same version can leave the Dock showing
+# the old bitmap until iconservices is purged.
+VERSION="1.1"
 DEST="${1:-.}"
 
 echo "==> Compiling ($(ls Sources/*.swift | wc -l | tr -d ' ') files)"

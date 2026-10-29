@@ -1,5 +1,4 @@
-# Build intermediates (the finished bundle is committed; these are not)
+# Build output — build.sh regenerates this from Sources/ + Resources/.
+Kestrel.app/
 build/
-*.o
-*.swiftmodule
-.DS_Store
+*.zip
