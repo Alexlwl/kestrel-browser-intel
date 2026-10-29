@@ -69,8 +69,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-# Generate a simple app icon from an SF Symbol-ish drawing.
-if [ -x /usr/bin/python3 ]; then python3 tools/make_icon.py "$APP/Contents/Resources/AppIcon.icns" || true; fi
+# Generate the app icon with CoreGraphics. The old SVG+qlmanage path is gone: QuickLook
+# rasterises SVG onto opaque white, which gave the icon a hard white border in the Dock.
+if command -v swift >/dev/null 2>&1; then
+  swift tools/make_icon.swift "$APP/Contents/Resources/AppIcon.icns" || echo "   (icon generation skipped)"
+fi
 
 codesign --force --deep --sign - "$APP" >/dev/null 2>&1 || echo "   (ad-hoc signing skipped)"
 touch "$APP"
